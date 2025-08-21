@@ -27,7 +27,7 @@ export default function SignupPage() {
   const formSchema = z.object({
     username: z
       .string()
-      .min(1, "ユーザーネームを入力してください")
+      .min(1, "ユーザー名を入力してください")
       .refine((val) => {
         return !users.some((user: UserType) => {
           return val === user.username
@@ -50,21 +50,28 @@ export default function SignupPage() {
   };
 
   return (
-    <>
+    <div className="h-screen flex flex-col items-center justify-center">
       {isPending ? (
-        <div>Loading...</div>
+        <div className="text-gray-700 text-4xl font-semibold">Loading...</div>
       ) : (
-        <div>
+        <div className="flex flex-col items-center justify-center space-y-3">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
+            <form
+              className="flex flex-col items-center justify-center space-y-2"
+              onSubmit={form.handleSubmit(onSubmit)}
+            >
               <FormField
                 control={form.control}
                 name="username"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col items-center justify-center">
                     <FormLabel>username</FormLabel>
                     <FormControl>
-                      <Input placeholder="username" {...field} />
+                      <Input
+                        className="bg-white"
+                        placeholder="username"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -74,10 +81,11 @@ export default function SignupPage() {
                 control={form.control}
                 name="password"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col items-center justify-center">
                     <FormLabel>password</FormLabel>
                     <FormControl>
                       <Input
+                        className="bg-white"
                         type="password"
                         placeholder="password"
                         {...field}
@@ -95,6 +103,6 @@ export default function SignupPage() {
           </Button>
         </div>
       )}
-    </>
+    </div>
   );
 }
