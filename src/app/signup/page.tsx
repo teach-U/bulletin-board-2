@@ -30,7 +30,7 @@ export default function SignupPage() {
       .min(1, "ユーザーネームを入力してください")
       .refine((val) => {
         return !users.some((user: UserType) => {
-          return user.username === val;
+          return val === user.username
         });
       }, "その名前はすでに使用されています"),
     password: z.string().min(8, "8文字以上のパスワードを設定してください"),
