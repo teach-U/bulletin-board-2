@@ -18,17 +18,7 @@ model User {
   updateAt DateTime @updatedAt
 
   threads  Thread[]
-  sessions Session[]
   comments Comment[]
-}
-
-model Session {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  token     String   @unique
-  expiresAt DateTime
-  createAt  DateTime @default(now())
 }
 
 model Thread {
