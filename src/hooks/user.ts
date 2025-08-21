@@ -17,9 +17,11 @@ export const useUsers = (id?: number) => {
   useEffect(() => {
     startTransition(async () => {
       const users = await getAllUsersAction();
+      console.log(users);
       setUsers(users);
       if (id == undefined) return;
       const user = await getUserAction(id);
+      console.log(user);
       setUser(user!);
     });
   }, [id]);
@@ -31,10 +33,19 @@ export const useUsers = (id?: number) => {
     });
   };
 
-  const updateUser = (username: string, password: string) => {
-    if (id === undefined) return;
+  const updateUser = (username?: string, password?: string) => {
+    if (
+      id === undefined ||
+      user?.username === undefined ||
+      user.password === undefined
+    )
+      return;
     startTransition(async () => {
-      const newUser = await updateUserAction(id, username, password);
+      const newUser = await updateUserAction(
+        id,
+        username ?? user?.username,
+        password ?? user?.password
+      );
       setUser(newUser);
     });
   };
