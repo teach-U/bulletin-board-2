@@ -22,11 +22,14 @@ export const addUserAction = async (username: string, password: string) => {
 
 export const updateUserAction = async (
   id: number,
-  username: string,
-  password: string
+  username?: string,
+  password?: string
 ) => {
   const updatedUser = await prisma.user.update({
-    data: { username, password },
+    data: {
+      ...(username !== undefined && { username }),
+      ...(password !== undefined && { password }),
+    },
     where: { id },
   });
   console.log(updatedUser);

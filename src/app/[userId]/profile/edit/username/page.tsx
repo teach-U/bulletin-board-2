@@ -1,5 +1,10 @@
 "use client";
 
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import z from "zod";
+
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -10,19 +15,31 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useUsers } from "@/hooks/user";
+import {
+  getAllUsersAction,
+  getUserAction,
+  updateUserAction,
+} from "@/lib/actions/user";
 import { UserType } from "@/types/type";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
-import z from "zod";
 
 export default function EditFormPage() {
   const { userId } = useParams();
-  const { users, user, updateUser, isPending } = useUsers(Number(userId));
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [user, setUser] = useState<UserType | undefined>(undefined);
+  const [isPending, startTransition] = useTransition();
 
   const router = useRouter();
+
+  useEffect(() => {
+    startTransition(async () => {
+      const users = await getAllUsersAction();
+      setUsers(users);
+
+      const user = await getUserAction(Number(userId));
+      setUser(user!);
+    });
+  }, [userId]);
 
   const formSchema = z.object({
     username: z
@@ -48,27 +65,37 @@ export default function EditFormPage() {
   }, [form, user]);
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    updateUser(values.username, user?.password);
+    startTransition(async () => {
+      const user = await updateUserAction(Number(userId), values.username);
+      setUser(user);
 
-    router.push(`/${userId}/profile`);
+      router.push(`/${userId}/profile`);
+    });
   };
 
   return (
-    <div>
+    <div className="h-screen flex flex-col items-center justify-center">
       {isPending ? (
-        <div>Loading...</div>
+        <div className="text-3xl font-bold">Loading...</div>
       ) : (
-        <div>
+        <div className="flex flex-col items-center justify-center space-y-2">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
+            <form
+              className="flex flex-col items-center justify-center space-y-2"
+              onSubmit={form.handleSubmit(onSubmit)}
+            >
               <FormField
                 control={form.control}
                 name="username"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="flex flex-col items-center justify-center">
                     <FormLabel>new username</FormLabel>
                     <FormControl>
-                      <Input placeholder="new username" {...field} />
+                      <Input
+                        className="bg-white"
+                        placeholder="new username"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

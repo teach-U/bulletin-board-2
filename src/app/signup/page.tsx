@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 
@@ -15,12 +16,22 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useUsers } from "@/hooks/user";
+import { getAllUsersAction } from "@/lib/actions/user";
 import { UserType } from "@/types/type";
 import { zodResolver } from "@hookform/resolvers/zod";
 
+import { addUserAction } from "../../lib/actions/user";
+
 export default function SignupPage() {
-  const { users, user, isPending, addUser } = useUsers();
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    startTransition(async () => {
+      const users = await getAllUsersAction();
+      setUsers(users);
+    });
+  }, []);
 
   const router = useRouter();
 
@@ -30,7 +41,7 @@ export default function SignupPage() {
       .min(1, "ユーザー名を入力してください")
       .refine((val) => {
         return !users.some((user: UserType) => {
-          return val === user.username
+          return val === user.username;
         });
       }, "その名前はすでに使用されています"),
     password: z.string().min(8, "8文字以上のパスワードを設定してください"),
@@ -45,8 +56,11 @@ export default function SignupPage() {
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    addUser(values.username, values.password);
-    router.push(`/${user?.id}`);
+    startTransition(async () => {
+      const user = await addUserAction(values.username, values.password);
+
+      router.push(`/${user.id}`);
+    });
   };
 
   return (

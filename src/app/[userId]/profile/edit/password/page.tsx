@@ -10,19 +10,27 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useUsers } from "@/hooks/user";
+import { getUserAction, updateUserAction } from "@/lib/actions/user";
 import { UserType } from "@/types/type";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import z from "zod";
 
 export default function EditFormPage() {
   const { userId } = useParams();
-  const { user, updateUser, isPending } = useUsers(Number(userId));
+  const [user, setUser] = useState<UserType | undefined>(undefined);
+  const [isPending, startTransition] = useTransition();
 
   const router = useRouter();
+
+  useEffect(() => {
+    startTransition(async () => {
+      const user = await getUserAction(Number(userId));
+      setUser(user!);
+    });
+  }, [userId]);
 
   const formSchema = z.object({
     password: z.string().min(1, "パスワードを入力してください"),
@@ -40,19 +48,29 @@ export default function EditFormPage() {
   }, [form, user]);
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
-    updateUser(user?.username, values.password);
+    startTransition(async () => {
+      const updatedUser = await updateUserAction(
+        Number(userId),
+        undefined,
+        values.password
+      );
+      setUser(updatedUser);
 
-    router.push(`/${userId}/profile`);
+      router.push(`/${userId}/profile`);
+    });
   };
 
   return (
-    <div>
+    <div className="h-screen flex flex-col items-center justify-center">
       {isPending ? (
-        <div>Loading...</div>
+        <div className="text-3xl font-bold">Loading...</div>
       ) : (
-        <div>
+        <div className="flex flex-col items-center justify-center space-y-2">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
+            <form
+              className="flex flex-col items-center justify-center space-y-2"
+              onSubmit={form.handleSubmit(onSubmit)}
+            >
               <FormField
                 control={form.control}
                 name="password"
@@ -60,7 +78,11 @@ export default function EditFormPage() {
                   <FormItem>
                     <FormLabel>new password</FormLabel>
                     <FormControl>
-                      <Input placeholder="new password" {...field} />
+                      <Input
+                        className="bg-white"
+                        placeholder="new password"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

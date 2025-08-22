@@ -15,14 +15,23 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useUsers } from "@/hooks/user";
 import { UserType } from "@/types/type";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState, useTransition } from "react";
+import { getAllUsersAction } from "@/lib/actions/user";
 
 export default function LoginPage() {
-  const { users, isPending } = useUsers();
+  const [users, setUsers] = useState<UserType[]>([]);
+  const [isPending, startTransition] = useTransition();
 
   const router = useRouter();
+
+  useEffect(() => {
+    startTransition(async () => {
+      const users = await getAllUsersAction();
+      setUsers(users);
+    });
+  }, []);
 
   const formSchema = z
     .object({
@@ -78,7 +87,11 @@ export default function LoginPage() {
                   <FormItem className="flex flex-col items-center justify-center">
                     <FormLabel>username</FormLabel>
                     <FormControl>
-                      <Input className="bg-white" placeholder="username" {...field} />
+                      <Input
+                        className="bg-white"
+                        placeholder="username"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
